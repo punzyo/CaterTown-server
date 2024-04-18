@@ -4,7 +4,7 @@ import express from 'express';
 import cors from 'cors';
 import { AccessToken } from 'livekit-server-sdk';
 
-const createToken = async () => {
+const createToken = async (roomName) => {
   // if this room doesn't exist, it'll be automatically created when the first
   // client joins
   const roomName = 'quickstart-room1';
@@ -27,7 +27,7 @@ app.use(cors());
 const port = 3000;
 
 app.get('/getToken', async (req, res) => {
-  res.send(await createToken());
+  res.send(await createToken(roomName));
 });
 
 app.listen(port, () => {
