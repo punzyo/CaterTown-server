@@ -7,7 +7,7 @@ import { AccessToken } from 'livekit-server-sdk';
 const createToken = async (roomName) => {
   // if this room doesn't exist, it'll be automatically created when the first
   // client joins
-  const roomName = 'quickstart-room1';
+
   // identifier to be used for participant.
   // it's available as LocalParticipant.identity with livekit-client SDK
   const participantName = `quickstart-username-${Date.now()}`
