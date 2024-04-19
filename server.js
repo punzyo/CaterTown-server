@@ -1,15 +1,15 @@
 // server.js
-import 'dotenv/config'
+import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import { AccessToken } from 'livekit-server-sdk';
 
-const createToken = async (roomName) => {
-  // if this room doesn't exist, it'll be automatically created when the first
-  // client joins
+const app = express();
+app.use(cors());
+const port = 3000;
 
-  // identifier to be used for participant.
-  // it's available as LocalParticipant.identity with livekit-client SDK
+const createToken = async (roomName) => {
+  console.log(roomName);
   const participantName = `quickstart-username-${Date.now()}`
 
   const at = new AccessToken(process.env.LIVEKIT_API_KEY, process.env.LIVEKIT_API_SECRET, {
@@ -19,17 +19,22 @@ const createToken = async (roomName) => {
   });
   at.addGrant({ roomJoin: true, room: roomName });
 
-  return await at.toJwt();
+  return at.toJwt();
 }
 
-const app = express();
-app.use(cors());
-const port = 3000;
-
 app.get('/getToken', async (req, res) => {
-  res.send(await createToken(roomName));
+  if (!req.query.roomName) {
+    return res.status(400).send('Room name is required');
+  }
+  try {
+    const token = await createToken(req.query.roomName);
+    res.send(token);
+  } catch (error) {
+    console.error('Failed to create token:', error);
+    res.status(500).send('Failed to create token');
+  }
 });
 
 app.listen(port, () => {
-  console.log(`Server listening on port ${port}`)
-})
+  console.log(`Server listening on port ${port}`);
+});
