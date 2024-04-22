@@ -52,8 +52,8 @@ app.post('/webhook/:roomId', async (req, res) => {
   const roomId = req.params.roomId;
   const { action, pull_request } = req.body;
 
-  if (action === 'opened') {
-    const userLogin = pull_request.user.login; // GitHub 用户名
+  if (['opened', 'reopened', 'closed', 'merged'].includes(action)) {
+    const userLogin = pull_request.user.login; 
     const prData = {
       id: pull_request.id,
       title: pull_request.title,
@@ -61,32 +61,40 @@ app.post('/webhook/:roomId', async (req, res) => {
       user: userLogin,
       state: pull_request.state,
       url: pull_request.html_url,
-      isReviewed: false
+      description: pull_request.body || "No description provided",
     };
 
     const docRef = db.collection('rooms').doc(roomId).collection('pullRequests').doc(userLogin);
 
     try {
-      
       const doc = await docRef.get();
       if (!doc.exists) {
-     
+
         await docRef.set({ prs: [prData] });
       } else {
-      
-        await docRef.update({
-          prs: admin.firestore.FieldValue.arrayUnion(prData)
-        });
+        let existingPrs = doc.data().prs;
+        const prIndex = existingPrs.findIndex(pr => pr.id === prData.id);
+
+        if (prIndex === -1) {
+          existingPrs.push(prData);
+        } else {
+          existingPrs[prIndex] = prData;
+        }
+
+        await docRef.update({ prs: existingPrs });
       }
-      res.status(200).send('PR data saved to Firebase');
+      res.status(200).send('PR data updated in Firebase');
     } catch (error) {
       console.error('Firebase error:', error);
-      res.status(500).send('Failed to save PR data');
+      res.status(500).send('Failed to update PR data');
     }
   } else {
-    res.status(200).send('Not a PR opened event');
+    res.status(200).send('Event is not related to PR updates');
   }
 });
+
+
+
 
 
 app.listen(port, () => {
