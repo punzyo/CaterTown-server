@@ -52,7 +52,7 @@ app.post('/webhook/:roomId', async (req, res) => {
   if (['opened', 'reopened', 'closed', 'merged'].includes(action)) {
     const userLogin = pull_request.user.login;
     const prData = {
-      action: pull_request.action,
+      action: action,
       id: pull_request.id,
       title: pull_request.title,
       createdAt: pull_request.created_at,
