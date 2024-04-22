@@ -48,22 +48,36 @@ app.get('/getToken', async (req, res) => {
 });
 
 
-app.post('/webhook', async (req, res) => {
-  const payload = req.body;
+app.post('/webhook/:roomId', async (req, res) => {
+  const roomId = req.params.roomId;
+  const { action, pull_request } = req.body;
 
-
-  if (payload.action === 'opened') {
+  if (action === 'opened') {
+    const userLogin = pull_request.user.login; // GitHub 用户名
     const prData = {
-      id: payload.pull_request.id,
-      title: payload.pull_request.title,
-      createdAt: payload.pull_request.created_at,
-      user: payload.pull_request.user.login,
-      state: payload.pull_request.state,
-      url: payload.pull_request.html_url
+      id: pull_request.id,
+      title: pull_request.title,
+      createdAt: pull_request.created_at,
+      user: userLogin,
+      state: pull_request.state,
+      url: pull_request.html_url,
+      isReviewed: false
     };
 
+    const docRef = db.collection('rooms').doc(roomId).collection('pullRequests').doc(userLogin);
+
     try {
-      await db.collection('pull_requests').doc(prData.id.toString()).set(prData);
+      
+      const doc = await docRef.get();
+      if (!doc.exists) {
+     
+        await docRef.set({ prs: [prData] });
+      } else {
+      
+        await docRef.update({
+          prs: admin.firestore.FieldValue.arrayUnion(prData)
+        });
+      }
       res.status(200).send('PR data saved to Firebase');
     } catch (error) {
       console.error('Firebase error:', error);
@@ -73,6 +87,7 @@ app.post('/webhook', async (req, res) => {
     res.status(200).send('Not a PR opened event');
   }
 });
+
 
 app.listen(port, () => {
   console.log(`Server listening on port ${port}`);
