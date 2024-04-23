@@ -63,7 +63,7 @@ app.post('/webhook/:roomId', async (req, res) => {
       user: userLogin,
       state: pull_request.state,
       url: pull_request.html_url,
-      description: pull_request.body.replaceAll('\\n', '\n') || '',
+      description: pull_request.body.replaceAll("\\r?\\n", "\r\n") || '',
     };
 
     const docRef = db
