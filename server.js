@@ -52,9 +52,9 @@ app.post('/webhook/:roomId', async (req, res) => {
   if (['opened', 'reopened', 'closed', 'merged'].includes(action)) {
     const userLogin = pull_request.user.login;
     const prData = {
-      baseBranch:pull_request.base.ref,
-      headBranch:pull_request.head.ref,
-      repo:pull_request.base.repo.name,
+      baseBranch: pull_request.base.ref,
+      headBranch: pull_request.head.ref,
+      repo: pull_request.base.repo.name,
       avatar_url: pull_request.user.avatar_url,
       action: action,
       id: pull_request.id,
@@ -63,9 +63,8 @@ app.post('/webhook/:roomId', async (req, res) => {
       user: userLogin,
       state: pull_request.state,
       url: pull_request.html_url,
-      description: pull_request.body || '',
-      abc:"Line one\nLine two\nLine three"
-    };console.log(pull_request.body)
+      description: pull_request.body.replaceAll('\\n', '\n') || '',
+    };
 
     const docRef = db
       .collection('rooms')
