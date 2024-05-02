@@ -48,7 +48,7 @@ app.get('/getToken', async (req, res) => {
 app.post('/webhook/:roomId', async (req, res) => {
   const roomId = req.params.roomId;
   const { action, pull_request } = req.body;
-
+console.log(action)
   if (['opened', 'reopened', 'closed', 'merged'].includes(action)) {
     const userLogin = pull_request.user.login;
     const prData = {
@@ -71,10 +71,11 @@ app.post('/webhook/:roomId', async (req, res) => {
       .doc(roomId)
       .collection('pullRequests')
       .doc(userLogin);
-
+    console.log(prData)
     try {
       const doc = await docRef.get();
       if (!doc.exists) {
+          console.log('1')
         await docRef.set({ prs: [prData] });
       } else {
         let existingPrs = doc.data().prs;
