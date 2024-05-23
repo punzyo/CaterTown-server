@@ -66,20 +66,17 @@ console.log(action)
       url: pull_request.html_url,
       description: pull_request.body.replace(/\r/g, '\n')|| '',
     };
-console.log('房間',roomId,'動作',action)
     const docRef = db
       .collection('rooms')
       .doc(roomId)
       .collection('pullRequests')
       .doc(userLogin);
-    console.log('跑到這裡', prData)
     try {
       const doc = await docRef.get();
       if (!doc.exists) {
           console.log('文檔不存在')
         await docRef.set({ prs: [prData] });
       } else {
-        console.log('執行到這裡')
         let existingPrs = doc.data().prs;
         const prIndex = existingPrs.findIndex((pr) => pr.id === prData.id);
 
