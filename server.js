@@ -5,7 +5,6 @@ import { AccessToken } from 'livekit-server-sdk';
 import admin from 'firebase-admin';
 
 const app = express();
-app.use(cors());
 app.use(express.json());
 
 const port = 3000;
@@ -29,6 +28,19 @@ const createToken = async (roomId, charName) => {
   return at.toJwt();
 };
 
+const allowedOrigins = ['https://catertown.site'];
+
+const corsOptions = {
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  }
+};
+
+app.use('/getToken', cors(corsOptions));
 app.get('/getToken', async (req, res) => {
   if (!req.query.roomId) {
     return res.status(400).send('Room id is required');
@@ -45,11 +57,20 @@ app.get('/getToken', async (req, res) => {
   }
 });
 
-app.post('/webhook/:roomId', async (req, res) => {
+function verifyGitHubUserAgent(req, res, next) {
+  const userAgent = req.headers['user-agent'];
+
+  if (userAgent && userAgent.startsWith('GitHub-Hookshot/')) {
+    return next();
+  } else {
+    return res.status(403).send('Forbidden');
+  }
+}
+
+app.post('/webhook/:roomId',verifyGitHubUserAgent, async (req, res) => {
   const roomId = req.params.roomId;
   const { action, pull_request } = req.body;
   
-console.log(action)
   if (['opened', 'reopened', 'closed', 'merged'].includes(action)) {
     const userLogin = pull_request.user.login;
     const prData = {
